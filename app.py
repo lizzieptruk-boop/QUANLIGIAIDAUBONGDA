@@ -65,7 +65,7 @@ def calculate_bxh():
     return bxh
 
 # 4. Giao diện
-st.title("🏆 QUẢN LÝ BÓNG ĐÁ - PHIÊN BẢN ỔN ĐỊNH")
+st.title("🏆 QUẢN LÝ GIẢI ĐẤU BÓNG ĐÁ")
 search = st.text_input("🔍 Tìm đội bóng:", key="main_search")
 
 tab1, tab2, tab3, tab4 = st.tabs(["📊 Bảng Xếp Hạng", "📅 Lịch Thi Đấu", "🛠 Cấu Hình Đội", "📜 Khôi Phục"])
@@ -147,3 +147,4 @@ with tab4:
             st.session_state.history = st.session_state.history[i+1:]
             st.session_state.session_id += 1
             st.rerun()
+
