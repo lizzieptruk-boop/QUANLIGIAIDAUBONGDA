@@ -5,20 +5,6 @@ from datetime import datetime
 # 1. CẤU HÌNH
 st.set_page_config(page_title="Football Admin Pro", layout="wide")
 
-# Hàm lưu dữ liệu vào file CSV
-def save_data():
-    st.session_state.df_doi.to_csv("Tin - Đội bóng.csv", index=False)
-    st.session_state.df_tran.to_csv("Tin - Trận đấu.csv", index=False)
-
-# Hàm ghi lại lịch sử
-def record_history(msg):
-    snapshot = {
-        'msg': msg, 'time': datetime.now().strftime("%H:%M:%S"),
-        'df_doi_snap': st.session_state.df_doi.copy(),
-        'df_tran_snap': st.session_state.df_tran.copy()
-    }
-    st.session_state.history.insert(0, snapshot)
-
 # 2. KHỞI TẠO DỮ LIỆU
 def load_initial_data():
     if 'df_doi' not in st.session_state:
@@ -27,21 +13,40 @@ def load_initial_data():
         df_t = pd.read_csv("Tin - Trận đấu.csv")
         df_t['Vòng'] = df_t['Vòng'].ffill()
         df_t = df_t.dropna(subset=[df_t.columns[4], df_t.columns[7]])
+        # Chuyển đổi tỷ số sang kiểu số
         df_t.iloc[:, 5] = pd.to_numeric(df_t.iloc[:, 5], errors='coerce').fillna(0).astype(int)
         df_t.iloc[:, 6] = pd.to_numeric(df_t.iloc[:, 6], errors='coerce').fillna(0).astype(int)
         st.session_state.df_tran = df_t
     if 'history' not in st.session_state:
         st.session_state.history = []
+    if 'has_changes' not in st.session_state:
+        st.session_state.has_changes = False
 
 load_initial_data()
 
-# 3. TÍNH BXH
-def calculate_bxh(df_doi_in, df_tran_in):
-    teams = df_doi_in['Đội tuyển'].unique()
+# --- CÁC HÀM HỖ TRỢ ---
+def record_history(msg):
+    snapshot = {
+        'msg': msg, 'time': datetime.now().strftime("%H:%M:%S"),
+        'df_doi_snap': st.session_state.df_doi.copy(),
+        'df_tran_snap': st.session_state.df_tran.copy()
+    }
+    st.session_state.history.insert(0, snapshot)
+
+def apply_changes(msg="Cập nhật dữ liệu"):
+    # Ghi đè trực tiếp vào file CSV
+    st.session_state.df_doi.to_csv("Tin - Đội bóng.csv", index=False)
+    st.session_state.df_tran.to_csv("Tin - Trận đấu.csv", index=False)
+    record_history(msg)
+    st.session_state.has_changes = False
+    st.success(f"✅ Đã lưu thành công: {msg}")
+
+def calculate_bxh(df_doi, df_tran):
+    teams = df_doi['Đội tuyển'].unique()
     bxh = pd.DataFrame(teams, columns=['Đội tuyển'])
     for col in ['Trận', 'Thắng', 'Hòa', 'Thua', 'BT', 'BB', 'HS', 'Điểm']: bxh[col] = 0
     
-    for _, r in df_tran_in.iterrows():
+    for _, r in df_tran.iterrows():
         t1, s1, s2, t2 = r.iloc[4], r.iloc[5], r.iloc[6], r.iloc[7]
         if t1 in teams and t2 in teams:
             for t, sm, so in [(t1, s1, s2), (t2, s2, s1)]:
@@ -56,17 +61,23 @@ def calculate_bxh(df_doi_in, df_tran_in):
     bxh['HS'] = bxh['BT'] - bxh['BB']
     bxh = bxh.sort_values(by=['Điểm', 'HS', 'BT'], ascending=False).reset_index(drop=True)
     bxh.index = bxh.index + 1
-    bxh.index.name = "STT"
     return bxh
 
-# 4. GIAO DIỆN CHÍNH
-st.title("⚽ QUẢN LÝ BÓNG ĐÁ - LIVE UPDATE")
+# 3. GIAO DIỆN CHÍNH
+st.title("⚽ QUẢN LÝ BÓNG ĐÁ - PHIÊN BẢN TỔNG HỢP")
+
+# Nút xác nhận tổng (Chỉ hiện khi có thay đổi)
+if st.session_state.has_changes:
+    st.warning("⚠️ Bạn có thay đổi chưa được lưu vào file CSV!")
+    if st.button("💾 XÁC NHẬN VÀ GHI ĐÈ FILE HỆ THỐNG", type="primary", use_container_width=True):
+        apply_changes("Người dùng xác nhận lưu thay đổi")
+        st.rerun()
 
 tab1, tab2, tab3, tab4 = st.tabs(["📊 Bảng Xếp Hạng", "📅 Lịch Thi Đấu", "🛠 Cấu Hình Đội", "📜 Nhật Ký"])
 
 with tab1:
     col_s, col_abc = st.columns([3, 1])
-    search = col_s.text_input("🔍 Tìm kiếm đội bóng")
+    search = col_s.text_input("🔍 Tìm kiếm tên đội bóng...")
     abc = col_abc.checkbox("Sắp xếp tên A-Z")
     
     res = calculate_bxh(st.session_state.df_doi, st.session_state.df_tran)
@@ -77,7 +88,7 @@ with tab1:
     st.table(res)
 
 with tab2:
-    st.subheader("Chỉnh sửa tỷ số trực tiếp")
+    st.subheader("Chỉnh sửa tỷ số trực tiếp (Nhấn 'Xác nhận' phía trên để lưu vĩnh viễn)")
     for v in sorted(st.session_state.df_tran['Vòng'].unique()):
         with st.expander(f"Vòng {int(v)}"):
             matches = st.session_state.df_tran[st.session_state.df_tran['Vòng'] == v]
@@ -92,43 +103,8 @@ with tab2:
                 if n1 != r.iloc[5] or n2 != r.iloc[6]:
                     st.session_state.df_tran.at[idx, st.session_state.df_tran.columns[5]] = n1
                     st.session_state.df_tran.at[idx, st.session_state.df_tran.columns[6]] = n2
-                    save_data()
-                    st.rerun()
+                    st.session_state.has_changes = True
 
 with tab3:
-    st.subheader("📝 Đổi tên đội")
-    t_old = st.selectbox("Chọn đội:", st.session_state.df_doi['Đội tuyển'])
-    t_new = st.text_input("Tên mới:")
-    if st.button("Cập nhật tên"):
-        st.session_state.df_doi.loc[st.session_state.df_doi['Đội tuyển'] == t_old, 'Đội tuyển'] = t_new
-        st.session_state.df_tran.replace(t_old, t_new, inplace=True)
-        save_data()
-        st.rerun()
-
-    st.divider()
-    st.subheader("➕ Thêm đội mới")
-    new_team = st.text_input("Tên đội:")
-    if st.button("Thêm ngay"):
-        if new_team and new_team not in st.session_state.df_doi['Đội tuyển'].values:
-            st.session_state.df_doi = pd.concat([st.session_state.df_doi, pd.DataFrame([{'Đội tuyển': new_team}])], ignore_index=True)
-            save_data()
-            st.rerun()
-
-    st.divider()
-    st.subheader("🗑️ Xóa đội")
-    del_team = st.selectbox("Chọn đội xóa:", st.session_state.df_doi['Đội tuyển'])
-    if st.button("Xóa ngay"):
-        record_history(f"Đã xóa đội {del_team}")
-        st.session_state.df_doi = st.session_state.df_doi[st.session_state.df_doi['Đội tuyển'] != del_team]
-        st.session_state.df_tran = st.session_state.df_tran[(st.session_state.df_tran.iloc[:,4] != del_team) & (st.session_state.df_tran.iloc[:,7] != del_team)]
-        save_data()
-        st.rerun()
-
-with tab4:
-    st.subheader("📜 Lịch sử thay đổi")
-    for i, item in enumerate(st.session_state.history):
-        if st.button(f"Khôi phục: {item['msg']} ({item['time']})", key=f"rev_{i}"):
-            st.session_state.df_doi = item['df_doi_snap'].copy()
-            st.session_state.df_tran = item['df_tran_snap'].copy()
-            save_data()
-            st.rerun()
+    # Đổi tên đội
+    st.subheader("
