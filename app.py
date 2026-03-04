@@ -174,11 +174,22 @@ with tab1:
     st.subheader("Bảng xếp hạng")
     res = calculate_bxh(st.session_state.df_doi, st.session_state.df_tran)
     
-    # Lọc dữ liệu nếu có search
-    if search: 
-        res = res[res['Đội tuyển'].astype(str).str.contains(search, case=False, na=False)]
-    
-    # Chỉ hiển thị bảng 1 lần duy nhất
+    if search:
+        # 1. Làm sạch cột Đội tuyển: xóa khoảng trắng thừa, chuẩn hóa Unicode
+        import unicodedata
+        
+        # Chuẩn hóa cột tên đội trong DataFrame
+        res['Search_Col'] = res['Đội tuyển'].astype(str).str.strip().apply(lambda x: unicodedata.normalize('NFC', x))
+        
+        # Chuẩn hóa từ khóa tìm kiếm
+        clean_search = unicodedata.normalize('NFC', search.strip())
+        
+        # 2. Tìm kiếm trên cột đã làm sạch
+        res = res[res['Search_Col'].str.contains(clean_search, case=False, na=False)]
+        
+        # 3. Bỏ cột phụ Search_Col trước khi hiển thị
+        res = res.drop(columns=['Search_Col'])
+        
     st.table(res)
 
 with tab2:
@@ -358,6 +369,7 @@ with tab4:
             st.session_state.session_id += 1
 
             st.rerun()
+
 
 
 
