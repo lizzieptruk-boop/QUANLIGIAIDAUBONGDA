@@ -171,14 +171,15 @@ tab1, tab2, tab3, tab4 = st.tabs(["📊 Bảng Xếp Hạng", "📅 Lịch Thi �
 
 
 with tab1:
-
     st.subheader("Bảng xếp hạng")
-
     res = calculate_bxh(st.session_state.df_doi, st.session_state.df_tran)
+    
+    # Lọc dữ liệu nếu có search
     if search: 
-        res = res[res['Đội tuyển'].str.contains(search, case=False, na=False)]    st.table(res)
+        res = res[res['Đội tuyển'].astype(str).str.contains(search, case=False, na=False)]
+    
+    # Chỉ hiển thị bảng 1 lần duy nhất
     st.table(res)
-
 
 with tab2:
 
@@ -357,5 +358,6 @@ with tab4:
             st.session_state.session_id += 1
 
             st.rerun()
+
 
 
