@@ -142,8 +142,14 @@ def calculate_bxh(df_doi_in, df_tran_in):
 
 st.title("⚽ QUẢN LÝ BÓNG ĐÁ")
 
-search = st.text_input("🔍 Tìm kiếm đội bóng:")
+# Thanh công cụ: Tìm kiếm và Nút sắp xếp nằm cạnh nhau
+col_search, col_sort = st.columns([4, 1])
+search = col_search.text_input("🔍 Tìm kiếm đội bóng:")
 
+if col_sort.button("🔤 Sắp xếp A-Z"):
+    # Sắp xếp DataFrame đội bóng theo tên
+    st.session_state.df_doi = st.session_state.df_doi.sort_values(by='Đội tuyển').reset_index(drop=True)
+    st.rerun() # Tự chạy lại để cập nhật thứ tự mới
 # THANH THÔNG BÁO VÀ NÚT XÁC NHẬN TỔNG
 
 if st.session_state.has_changes:
@@ -369,6 +375,7 @@ with tab4:
             st.session_state.session_id += 1
 
             st.rerun()
+
 
 
 
