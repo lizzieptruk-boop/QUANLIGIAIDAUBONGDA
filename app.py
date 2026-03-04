@@ -246,8 +246,12 @@ with tab2:
 
 
 with tab3:
-    # ABC Sắp xếp danh sách chọn đội
-    all_teams_abc = sorted(st.session_state.draft_doi['Đội tuyển'].tolist())
+    # Sắp xếp danh sách đội để khi chọn tên trong Selectbox sẽ dễ tìm hơn
+    all_teams = sorted(st.session_state.draft_doi['Đội tuyển'].tolist()) 
+    
+    st.subheader("📝 Đổi tên đội bóng")
+    # Thay all_teams vào Selectbox
+    t_old = c_sel.selectbox("Chọn đội:", all_teams, key=f"edit_s_{st.session_state.session_id}")
     
     # 3.1 ĐỔI TÊN ĐỘI
 
@@ -382,6 +386,7 @@ with tab4:
             st.session_state.session_id += 1
 
             st.rerun()
+
 
 
 
