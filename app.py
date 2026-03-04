@@ -7,7 +7,6 @@ from datetime import datetime
 import io
 
 
-
 # 1. CẤU HÌNH
 
 st.set_page_config(page_title="Football Admin - Master Confirm", layout="wide")
@@ -43,6 +42,19 @@ def load_initial_data():
 
         st.session_state.df_tran = df_t
 
+        # Tạo bản nháp (Draft) nếu chưa có
+
+    if 'draft_doi' not in st.session_state:
+
+        st.session_state.draft_doi = st.session_state.df_doi.copy()
+
+    if 'draft_tran' not in st.session_state:
+
+        st.session_state.draft_tran = st.session_state.df_tran.copy()
+
+    if 'has_changes' not in st.session_state:
+
+        st.session_state.has_changes = False
 
 load_initial_data()
 
