@@ -11,7 +11,8 @@ import io
 # 1. CẤU HÌNH
 
 st.set_page_config(page_title="Football Admin - Master Confirm", layout="wide")
-
+if 'sort_abc' not in st.session_state:
+    st.session_state.sort_abc = False
 
 
 if 'session_id' not in st.session_state:
@@ -88,52 +89,37 @@ def record_history(msg):
 
 # 3. TÍNH BXH (Dựa trên dữ liệu ĐÃ XÁC NHẬN)
 
-def calculate_bxh(df_doi_in, df_tran_in):
-
+def calculate_bxh(df_doi_in, df_tran_in, sort_by_abc=False):
     teams = df_doi_in['Đội tuyển'].unique()
-
+    # Nếu đang ở chế độ ABC, sắp xếp danh sách đội tuyển trước khi tạo bảng
+    if sort_by_abc:
+        teams = sorted(teams)
+        
     bxh = pd.DataFrame(teams, columns=['Đội tuyển'])
-
     for col in ['Trận', 'Thắng', 'Hòa', 'Thua', 'BT', 'BB', 'HS', 'Điểm']: bxh[col] = 0
-
     
-
     for _, r in df_tran_in.iterrows():
-
         t1, s1, s2, t2 = r.iloc[4], r.iloc[5], r.iloc[6], r.iloc[7]
-
         if t1 in teams and t2 in teams:
-
             for t, sm, so in [(t1, s1, s2), (t2, s2, s1)]:
-
                 idx_m = bxh[bxh['Đội tuyển'] == t].index
-
                 if not idx_m.empty:
-
                     idx = idx_m[0]
-
                     bxh.at[idx, 'Trận'] += 1
-
                     bxh.at[idx, 'BT'] += sm
-
                     bxh.at[idx, 'BB'] += so
-
                     if sm > so: bxh.at[idx, 'Thắng'] += 1; bxh.at[idx, 'Điểm'] += 3
-
                     elif sm == so: bxh.at[idx, 'Hòa'] += 1; bxh.at[idx, 'Điểm'] += 1
-
                     else: bxh.at[idx, 'Thua'] += 1
-
     
-
     bxh['HS'] = bxh['BT'] - bxh['BB']
-
-    bxh = bxh.sort_values(by=['Điểm', 'HS', 'BT'], ascending=False).reset_index(drop=True)
-
+    
+    # NẾU KHÔNG PHẢI CHẾ ĐỘ ABC -> Sắp xếp theo điểm (BXH bóng đá chuẩn)
+    if not sort_by_abc:
+        bxh = bxh.sort_values(by=['Điểm', 'HS', 'BT'], ascending=False).reset_index(drop=True)
+    
     bxh.index = bxh.index + 1
-
     bxh.index.name = "STT"
-
     return bxh
 
 
@@ -142,18 +128,15 @@ def calculate_bxh(df_doi_in, df_tran_in):
 
 st.title("⚽ QUẢN LÝ BÓNG ĐÁ")
 
-# 1. Khai báo nút bấm ở tầng trên cùng (Global)
-if st.button("🔤 Sắp xếp A-Z danh sách đội"):
-# Sắp xếp bản Gốc
-    st.session_state.df_doi = st.session_state.df_doi.sort_values(by='Đội tuyển').reset_index(drop=True)
-    # Sắp xếp cả bản Nháp (Quan trọng: để Tab 3 đồng bộ theo)
-    st.session_state.draft_doi = st.session_state.draft_doi.sort_values(by='Đội tuyển').reset_index(drop=True)
-    
-    st.success("Đã sắp xếp danh sách đội bóng!")
-    st.rerun()
+# 1. Đặt nút bấm và ô tìm kiếm cạnh nhau cho đẹp
+c1, c2 = st.columns([3, 1])
+search = c1.text_input("🔍 Tìm kiếm:")
 
-# 2. Xử lý tìm kiếm (Nếu cần)
-search = st.text_input("🔍 Tìm kiếm:")
+# 2. Nút bấm này đóng vai trò "Công tắc" (Toggle)
+label = "🔄 Xem theo Điểm" if st.session_state.sort_abc else "🔤 Xem theo A-Z"
+if c2.button(label):
+    st.session_state.sort_abc = not st.session_state.sort_abc
+    st.rerun()
 
 # 3. THANH THÔNG BÁO VÀ NÚT XÁC NHẬN TỔNG
 
@@ -175,16 +158,13 @@ if st.session_state.has_changes:
 
         st.rerun()
 
-
-
 tab1, tab2, tab3, tab4 = st.tabs(["📊 Bảng Xếp Hạng", "📅 Lịch Thi Đấu", "🛠 Cấu Hình & Chỉnh Sửa", "📜 Nhật Ký"])
 
-
-
 with tab1:
-    st.subheader("Bảng xếp hạng chính thức")
-    # Luôn tính toán dựa trên dữ liệu hiện tại trong session_state
-    res = calculate_bxh(st.session_state.df_doi, st.session_state.df_tran)
+    t.subheader("Bảng xếp hạng " + ("(A-Z)" if st.session_state.sort_abc else "(Theo Điểm)"))
+    
+    # Truyền biến sort_abc vào hàm tính toán
+    res = calculate_bxh(st.session_state.df_doi, st.session_state.df_tran, sort_by_abc=st.session_state.sort_abc
     
     # Logic tìm kiếm chuẩn hóa
     if search:
@@ -386,6 +366,7 @@ with tab4:
             st.session_state.session_id += 1
 
             st.rerun()
+
 
 
 
