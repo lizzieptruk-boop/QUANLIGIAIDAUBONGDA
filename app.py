@@ -226,23 +226,11 @@ with tab2:
 
 
 with tab3:
-    # Sắp xếp danh sách đội để khi chọn tên trong Selectbox sẽ dễ tìm hơn
-    all_teams = sorted(st.session_state.draft_doi['Đội tuyển'].tolist()) 
-    
-    st.subheader("📝 Đổi tên đội bóng")
-    # Thay all_teams vào Selectbox
-    t_old = c_sel.selectbox("Chọn đội:", all_teams, key=f"edit_s_{st.session_state.session_id}")
-    
     # 3.1 ĐỔI TÊN ĐỘI
-
     st.subheader("📝 Đổi tên đội bóng")
-
-    all_teams = st.session_state.draft_doi['Đội tuyển'].tolist()
-
+    all_teams = sorted(st.session_state.draft_doi['Đội tuyển'].tolist())
     c_sel, c_new = st.columns(2)
-
     t_old = c_sel.selectbox("Chọn đội:", all_teams, key=f"edit_s_{st.session_state.session_id}")
-
     t_new = c_new.text_input("Tên mới:", key=f"edit_n_{st.session_state.session_id}")
 
     if st.button("Lưu tạm: Đổi tên"):
@@ -366,6 +354,7 @@ with tab4:
             st.session_state.session_id += 1
 
             st.rerun()
+
 
 
 
