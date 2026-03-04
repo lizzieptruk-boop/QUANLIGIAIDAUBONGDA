@@ -144,9 +144,12 @@ st.title("⚽ QUẢN LÝ BÓNG ĐÁ")
 
 # 1. Khai báo nút bấm ở tầng trên cùng (Global)
 if st.button("🔤 Sắp xếp A-Z danh sách đội"):
-    # Sắp xếp trực tiếp vào df_doi gốc trong session_state
+# Sắp xếp bản Gốc
     st.session_state.df_doi = st.session_state.df_doi.sort_values(by='Đội tuyển').reset_index(drop=True)
-    # Rerun ngay lập tức để ép Tab 1 tính lại BXH với dữ liệu mới
+    # Sắp xếp cả bản Nháp (Quan trọng: để Tab 3 đồng bộ theo)
+    st.session_state.draft_doi = st.session_state.draft_doi.sort_values(by='Đội tuyển').reset_index(drop=True)
+    
+    st.success("Đã sắp xếp danh sách đội bóng!")
     st.rerun()
 
 # 2. Xử lý tìm kiếm (Nếu cần)
@@ -379,6 +382,7 @@ with tab4:
             st.session_state.session_id += 1
 
             st.rerun()
+
 
 
 
