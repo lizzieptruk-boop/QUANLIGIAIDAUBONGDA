@@ -175,9 +175,9 @@ with tab1:
     st.subheader("Bảng xếp hạng")
 
     res = calculate_bxh(st.session_state.df_doi, st.session_state.df_tran)
-    if search: res = res[res['Đội tuyển'].str.contains(search, case=False)]
+    if search: 
+        res = res[res['Đội tuyển'].str.contains(search, case=False, na=False)]    st.table(res)
     st.table(res)
-
 
 
 with tab2:
@@ -357,4 +357,5 @@ with tab4:
             st.session_state.session_id += 1
 
             st.rerun()
+
 
