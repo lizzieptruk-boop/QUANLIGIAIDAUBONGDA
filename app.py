@@ -161,10 +161,10 @@ if st.session_state.has_changes:
 tab1, tab2, tab3, tab4 = st.tabs(["📊 Bảng Xếp Hạng", "📅 Lịch Thi Đấu", "🛠 Cấu Hình & Chỉnh Sửa", "📜 Nhật Ký"])
 
 with tab1:
-    t.subheader("Bảng xếp hạng " + ("(A-Z)" if st.session_state.sort_abc else "(Theo Điểm)"))
+    st.subheader("Bảng xếp hạng " + ("(A-Z)" if st.session_state.sort_abc else "(Theo Điểm)"))
     
     # Truyền biến sort_abc vào hàm tính toán
-    res = calculate_bxh(st.session_state.df_doi, st.session_state.df_tran, sort_by_abc=st.session_state.sort_abc
+    res = calculate_bxh(st.session_state.df_doi, st.session_state.df_tran, sort_by_abc=st.session_state.sort_abc)
     
     # Logic tìm kiếm chuẩn hóa
     if search:
@@ -366,6 +366,7 @@ with tab4:
             st.session_state.session_id += 1
 
             st.rerun()
+
 
 
 
