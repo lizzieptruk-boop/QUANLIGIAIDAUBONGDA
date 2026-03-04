@@ -142,7 +142,7 @@ def calculate_bxh(df_doi_in, df_tran_in):
 
 st.title("⚽ QUẢN LÝ BÓNG ĐÁ")
 
-
+search = st.text_input("🔍 Tìm kiếm đội bóng:")
 
 # THANH THÔNG BÁO VÀ NÚT XÁC NHẬN TỔNG
 
@@ -358,6 +358,7 @@ with tab4:
             st.session_state.session_id += 1
 
             st.rerun()
+
 
 
 
