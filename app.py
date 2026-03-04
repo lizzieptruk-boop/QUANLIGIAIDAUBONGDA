@@ -142,14 +142,21 @@ def calculate_bxh(df_doi_in, df_tran_in):
 
 st.title("⚽ QUẢN LÝ BÓNG ĐÁ")
 
-# Thanh công cụ: Tìm kiếm và Nút sắp xếp nằm cạnh nhau
+# 1. Khai báo công cụ tìm kiếm
 col_search, col_sort = st.columns([4, 1])
 search = col_search.text_input("🔍 Tìm kiếm đội bóng:")
 
-if col_sort.button("🔤 Sắp xếp A-Z"):
-    # Sắp xếp DataFrame đội bóng theo tên
+# 2. Nút sắp xếp - Đặt ở tầng ngoài cùng
+if st.button("🔤 Sắp xếp danh sách đội bóng A-Z"):
+    # Thực hiện sắp xếp trên bản nháp (draft) và bản chính thức (df_doi)
+    if 'draft_doi' in st.session_state:
+        st.session_state.draft_doi = st.session_state.draft_doi.sort_values(by='Đội tuyển').reset_index(drop=True)
+    
     st.session_state.df_doi = st.session_state.df_doi.sort_values(by='Đội tuyển').reset_index(drop=True)
-    st.rerun() # Tự chạy lại để cập nhật thứ tự mới
+    
+    st.success("Đã sắp xếp xong! Đang cập nhật...")
+    st.rerun() # BẮT BUỘC PHẢI CÓ để giao diện thay đổi ngay
+
 # THANH THÔNG BÁO VÀ NÚT XÁC NHẬN TỔNG
 
 if st.session_state.has_changes:
@@ -375,6 +382,7 @@ with tab4:
             st.session_state.session_id += 1
 
             st.rerun()
+
 
 
 
