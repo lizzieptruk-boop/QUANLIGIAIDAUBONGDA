@@ -185,14 +185,22 @@ with tab1:
     
     # Logic tìm kiếm chuẩn hóa
     if search:
-        # Dùng mask để lọc, đảm bảo xử lý được cả tiếng Việt và giá trị trống
-        mask = res['Đội tuyển'].astype(str).str.contains(search, case=False, na=False)
-        res = res[mask]
-    
-    if res.empty:
-        st.info("Không tìm thấy đội bóng nào khớp với từ khóa.")
-    else:
-        st.table(res)
+        # 1. Làm sạch cột Đội tuyển: xóa khoảng trắng thừa, chuẩn hóa Unicode
+        import unicodedata
+        
+        # Chuẩn hóa cột tên đội trong DataFrame
+        res['Search_Col'] = res['Đội tuyển'].astype(str).str.strip().apply(lambda x: unicodedata.normalize('NFC', x))
+        
+        # Chuẩn hóa từ khóa tìm kiếm
+        clean_search = unicodedata.normalize('NFC', search.strip())
+        
+        # 2. Tìm kiếm trên cột đã làm sạch
+        res = res[res['Search_Col'].str.contains(clean_search, case=False, na=False)]
+        
+        # 3. Bỏ cột phụ Search_Col trước khi hiển thị
+        res = res.drop(columns=['Search_Col'])
+        
+    st.table(res)
 
 with tab2:
 
@@ -371,6 +379,7 @@ with tab4:
             st.session_state.session_id += 1
 
             st.rerun()
+
 
 
 
